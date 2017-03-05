@@ -1,0 +1,335 @@
+---
+title: "Homework of Dataminning, CH3"
+author: 'Zexian Wang, Student ID: 15420151152805'
+output:
+  pdf_document: default
+  html_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Q13
+
+### (a)
+
+```{r}
+set.seed(1)
+x <- rnorm(100)
+```
+
+### (b)
+
+```{r}
+eps <- rnorm(100,0,sqrt(0.25))
+```
+
+### (c)
+
+```{r}
+y <- -1 + 0.5*x + eps
+```
+
+The length of y is `r length(y)`, and the $\beta_0$ is -1, $\beta_1$ is 0.5.
+
+### (d)
+
+```{r}
+plot(x,y)
+```
+
+x and y have some linear relationship
+
+### (e)
+
+```{r}
+model_e <- lm(y ~ x)
+summary(model_e)
+```
+
+We get a model which has R-squared more than 0,4. $\hat{\beta_0}$ is `r model_e$coefficients[1]` while $\hat{\beta_1}$ is `r model_e$coefficients[2]`, which are similar to $\beta_0$ and $\beta_1$
+ 
+### (f)
+```{r}
+plot(y ~ x)
+abline(model_e)
+abline(-1, 0.5, col="red")
+legend("topleft", legend = c(" least squares line", "population regression line"), 
+       col = c("black","red"),lty = 1)
+```
+
+### (g)
+
+```{r}
+model_g <- lm(y ~ x + I(x^2))
+summary(model_g)
+```
+
+x^2 is not significant, there is not evidence that the quadratic term improves the
+model fit.
+
+### (h)
+
+#### (a)
+
+```{r}
+set.seed(1)
+x <- rnorm(100)
+```
+
+#### (b)
+
+```{r}
+eps_l <- rnorm(100,0,sqrt(0.10))
+```
+
+#### (c)
+
+```{r}
+y_l <- -1 + 0.5*x + eps_l
+```
+
+The length of y is `r length(y_l)`, and the $\beta_0$ is -1, $\beta_1$ is 0.5.
+
+#### (d)
+
+```{r}
+plot(x,y_l)
+```
+
+x and y have some linear relationship
+
+#### (e)
+
+```{r}
+model_e_l <- lm(y_l ~ x)
+summary(model_e_l)
+```
+
+We get a model which has R-squared more than 0,6. $\hat{\beta_0}$ is `r model_e_l$coefficients[1]` while $\hat{\beta_1}$ is `r model_e_l$coefficients[2]`, which are more similar to $\beta_0$ and $\beta_1$
+ 
+#### (f)
+```{r}
+plot(y_l ~ x)
+abline(model_e_l)
+abline(-1, 0.5, col="red")
+legend("topleft", legend = c(" least squares line", "population regression line"), 
+       col = c("black","red"),lty = 1)
+```
+
+#### conclusion
+
+With the noise in data become less, the model is more similar to the true relationship between x and y.
+
+### (i)
+
+#### (a)
+
+```{r}
+set.seed(1)
+x <- rnorm(100)
+```
+
+#### (b)
+
+```{r}
+eps_m <- rnorm(100,0,sqrt(0.50))
+```
+
+#### (c)
+
+```{r}
+y_m <- -1 + 0.5*x + eps_m
+```
+
+The length of y is `r length(y_m)`, and the $\beta_0$ is -1, $\beta_1$ is 0.5.
+
+#### (d)
+
+```{r}
+plot(x,y_m)
+```
+
+x and y have some linear relationship
+
+#### (e)
+
+```{r}
+model_e_m <- lm(y_m ~ x)
+summary(model_e_m)
+```
+
+We get a model which has R-squared more than 0.3. $\hat{\beta_0}$ is `r model_e_m$coefficients[1]` while $\hat{\beta_1}$ is `r model_e_m$coefficients[2]`, which are less similar to $\beta_0$ and $\beta_1$
+ 
+#### (f)
+```{r}
+plot(y_m ~ x)
+abline(model_e_m)
+abline(-1, 0.5, col="red")
+legend("topleft", legend = c(" least squares line", "population regression line"), 
+       col = c("black","red"),lty = 1)
+```
+
+#### conclusion
+
+With the noise in data become more, the model is less similar to the true relationship between x and y.
+
+### (j)
+
+```{r}
+# confidence intervals for beta0 and beta1 based on the original data set
+confint(model_e)
+# confidence intervals for beta0 and beta1 based on the noisier data set
+confint(model_e_m)
+# confidence intervals for beta0 and beta1 based on the less noisy data set
+confint(model_e_l)
+```
+
+```{r, include=FALSE}
+rm(list = ls())
+```
+
+
+## Q15
+
+(a)
+
+```{r}
+library(MASS)
+```
+
+```{r}
+summary(lm(crim ~ zn, data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ indus, data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ chas, data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ nox, data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ rm, data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ age, data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ dis, data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ rad, data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ tax, data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ ptratio, data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ black, data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ lstat, data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ medv, data = Boston))
+```
+
+Each predictor and the response has a significant relationship except "chas". However, each predictor can only describ a small amount of the variation in the response
+
+```{r}
+plot(crim ~ . - crim, data = Boston)
+```
+
+(b)
+
+```{r}
+summary(lm(crim ~ . - crim, data = Boston))
+```
+
+Only a small number of variables are found to be statistically signficant. We can reject the null hypothesis for variables: dis and rad at the .001 level, medv at the .01 level, and zn and black at the .05 level.
+
+(c)
+
+```{r}
+x_axis <- NULL
+for (i in 2:14){
+  x_axis[i-1] <- lm(crim ~ Boston[,i], data = Boston)$coefficients[2]
+}
+y_axis <- lm(crim ~ . - crim, data = Boston)$coefficients[2:14]
+plot(y_axis ~ x_axis, main = "Univariate vs. Multiple Regression Coefficients", 
+    xlab = "Univariate", ylab = "Multiple")
+```
+
+(d)
+
+```{r}
+summary(lm(crim ~ zn + I(zn^2) + I(zn^3), data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ indus + I(indus^2) + I(indus^3), data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ chas + I(chas^2) + I(chas^3), data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ nox + I(nox^2) + I(nox^3), data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ rm + I(rm^2) + I(rm^3), data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ age + I(age^2) + I(age^3), data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ dis + I(dis^2) + I(dis^3), data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ rad + I(rad^2) + I(rad^3), data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ tax + I(tax^2) + I(tax^3), data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ ptratio + I(ptratio^2) + I(ptratio^3), data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ black + I(black^2) + I(black^3), data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ lstat + I(lstat^2) + I(lstat^3), data = Boston))
+```
+
+```{r}
+summary(lm(crim ~ medv + I(medv^2) + I(medv^3), data = Boston))
+```
+
+"chas" get NA value for the squared and cubed term because it is a dummy variable. 
+The variables indus, nox, age, dis, ptracio, and medv show some evidence of a non-linear relationship. Some of the squared and cubed terms of each of these variables are found to be statistically signficant.

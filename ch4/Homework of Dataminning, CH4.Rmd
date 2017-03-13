@@ -1,7 +1,7 @@
 ---
 title: "Homework of Dataminning, CH4"
 author: "Zexian Wang"
-date: "2017年3月12日"
+date: "2017-03-12"
 output: pdf_document
 ---
 
@@ -21,7 +21,7 @@ $p_k(x) = \frac{\pi_k\frac{1}{\sqrt{2\pi}\sigma_k}exp(-\frac{1}{2\sigma_k^2}(x -
 
 Finding the largest $p_k(x)$ is equivalent to finding the largest ${\pi_k\frac{1}{\sqrt{2\pi}\sigma_k}exp(-\frac{1}{2\sigma_k^2}(x - \mu_k)^2)}$.
 
-Taking log of the above expression, we get:
+Taking log of above expression, we get:
 
 $log(\pi_k) - log(\sigma_k) - \frac{1}{2\sigma_k^2}(x - \mu_k)^2$
 
@@ -33,7 +33,7 @@ or:
 
 $-\frac{1}{2\sigma_k^2}x^2+\frac{\mu_k}{\sigma_k^2}x-\frac{\mu_k^2}{2\sigma_k^2}-log(\sigma_k)+log(\pi_k)$
 
-This last expression is quadratic.
+This expression is quadratic.
 
 # Q5
 
@@ -52,7 +52,7 @@ The prediction accuracy of QDA may improve because it can learn more patterns in
 ##(d)
 
 False. The sample points in training set is not the whole population, QDA may learn some special patterns only appearing in the training set, which may cause wrong prediction in test set.
-
+  
 # Q11
 
 ```{r}
@@ -65,59 +65,122 @@ Auto <- Auto
 ```{r}
 Q11 <- data.frame(mpg01 = rep(0,nrow(Auto)), Auto)
 Q11$mpg01[Auto$mpg > median(Auto$mpg)] <- 1
+Q11$mpg <- NULL
 ```
 
+Of course we can't use mpg as a predictor because mpg01 is generalized from it.
+
 ## (b)
+
+```{r, fig.height=2.5, fig.width=3.5}
+for(i in 2:length(Q11)){
+  plot(Q11[,i], Q11$mpg01,xlab = names(Q11)[i], 
+       ylab = "mpg01", 
+       main = paste(names(Q11)[i],"and mpg01"))
+}
+```
+
+Higher displacement, horsepower, weight may have higher probability that mpg01 is equal to 0. Lower acceleration may have higher probability that mpg01 is equal to 0, but the effect is not as strong as the three variables above. name variable is obviously useless.
+
+```{r, fig.height=2.5, fig.width=3.5}
+for(i in 2:(length(Q11)-1)){
+  boxplot(Q11[,i] ~ Q11$mpg01,
+          ylab = names(Q11)[i], xlab = "mpg01", 
+          main = paste(names(Q11)[i],"and mpg01"))
+  }
+```
+
+In boxplot, we can find that higher cylinders may may have higher probability that mpg01 is equal to 0, while lower year and origin may may have higher probability that mpg01 is equal to 0, but the effect of origin is not as strong as the three variables above.
 
 ```{r}
 pairs(Q11)
 ```
 
-```{r}
-hist(log(Q11[,8]),xlab = names(Q11)[8])
-```
-
+We can find that displacement, horsepower and weight have linear relationship.
 
 ```{r}
-for(i in 2:length(Q11)){
-  plot(Q11[,i], Q11$mpg01,xlab = names(Q11)[i], ylab = "mpg01", main = paste(names(Q11)[i],"and mpg01"))
-}
+cor(Q11[3:5])
 ```
 
-Since mpg01 is generalized from mpg, it is highly correlate with mpg. Higher displacement, horsepower, weight may have higher probability that mpg01 is equal to 0. Lower acceleration may have higher probability that mpg01 is equal to 0. 
+From the correlation matrix, we find that displacement has high correlation with horsepower and weight(about 0.9). It can be represented by horsepower and weight
 
-```{r}
-for(i in 2:(length(Q11)-1)){
-  boxplot(Q11[,i] ~ Q11$mpg01,ylab = names(Q11)[i], xlab = "mpg01", main = paste(names(Q11)[i],"and mpg01"))
-  }
-```
-
-In boxplot, we can find that higher cylinders may may have higher probability that mpg01 is equal to 0, while lower year and origin may may have higher probability that mpg01 is equal to 0.
+So we choose cylinders, horsepower, weight, year as predictors.
 
 ## (c)
 
 ```{r}
 set.seed(1111)
 train <- sample(392,size = 294)
-Q11_train <- Q11[train,-c(2, 10)]
-Q11_test <- Q11[-train,-c(2, 10)]
+Q11_train <- Q11[train,-9]
+Q11_test <- Q11[-train,-9]
 ```
 
-## (d)
+## (d) LDA
 
 ```{r}
 library(MASS)
-lda.fit <- lda(mpg01 ~ .-origin, data = Q11_train)
-lda.pred_train <- predict(lda.fit, Q11_train)
-lda.class_train <- lda.pred_train$class
-table(lda.class_train ,Q11_train$mpg01)
-lda.pred_test <- predict(lda.fit, Q11_test)
-lda.class_test <- lda.pred_test$class
-table(lda.class_test ,Q11_test$mpg01)
+lda.fit <- lda(mpg01 ~ cylinders +  horsepower + weight + year, data = Q11_train)
+lda.pred_train <- predict(lda.fit, Q11_train)$class
+lda.cfmatrix_train <- table(lda.pred_train ,Q11_train$mpg01)
+lda.cfmatrix_train
+lda.pred_test <- predict(lda.fit, Q11_test)$class
+lda.cfmatrix_test <- table(lda.pred_test ,Q11_test$mpg01)
+lda.cfmatrix_test
+lda.test_error <- (lda.cfmatrix_test[1,2]+lda.cfmatrix_test[2,1])/nrow(Q11_test)
+lda.test_error
 ```
 
+## (e) QDA
 
+```{r}
+qda.fit <- qda(mpg01 ~ cylinders +  horsepower + weight + year, data = Q11_train)
+qda.pred_train <- predict(qda.fit, Q11_train)$class
+qda.cfmatrix_train <- table(qda.pred_train ,Q11_train$mpg01)
+qda.cfmatrix_train
+qda.pred_test <- predict(qda.fit, Q11_test)$class
+qda.cfmatrix_test <- table(qda.pred_test ,Q11_test$mpg01)
+qda.cfmatrix_test
+qda.test_error <- (qda.cfmatrix_test[1,2]+qda.cfmatrix_test[2,1])/nrow(Q11_test)
+qda.test_error
+```
 
+## (f) Logistic
+
+```{r}
+glm.fit <- glm(mpg01 ~ cylinders +  horsepower + weight + year, data = Q11_train,
+               family=binomial)
+glm.prob_train <- predict(glm.fit,type="response")
+glm.pred_train <- rep(0, nrow(Q11_train))
+glm.pred_train[glm.prob_train > 0.5] <- 1
+glm.cfmatrix_train <- table(glm.pred_train ,Q11_train$mpg01)
+glm.cfmatrix_train
+glm.prob_test <- predict(glm.fit,newdata = Q11_test, type="response")
+glm.pred_test <- rep(0, nrow(Q11_test))
+glm.pred_test[glm.prob_test > 0.5] <- 1
+glm.cfmatrix_test <- table(glm.pred_test ,Q11_test$mpg01)
+glm.cfmatrix_test
+glm.test_error <- (glm.cfmatrix_test[1,2]+glm.cfmatrix_test[2,1])/nrow(Q11_test)
+glm.test_error
+```
+
+## (g) KNN
+
+```{r}
+library(class)
+train_x <- Q11_train[,c("cylinders", "horsepower", "weight", "year")]
+test_x <- Q11_test[,c("cylinders", "horsepower", "weight", "year")]
+train_y <- Q11_train$mpg01
+test_y <- Q11_test$mpg01
+knn.test_error <- NULL
+for(k in 1:50){
+  knn.pred <- knn(train_x,test_x,train_y ,k)
+  knn.cfmatrix_train <- table(knn.pred,test_y)
+  knn.test_error <- c(knn.test_error, 
+                      (knn.cfmatrix_train[1,2]+knn.cfmatrix_train[2,1])/nrow(Q11_test))
+}
+which.min(knn.test_error)
+knn.test_error[1]
+```
 
 
 

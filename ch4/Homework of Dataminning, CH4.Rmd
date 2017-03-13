@@ -1,0 +1,125 @@
+---
+title: "Homework of Dataminning, CH4"
+author: "Zexian Wang"
+date: "2017年3月12日"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Q3
+
+If we subtitute 4.11:
+
+$f_k(x) = \frac{1}{\sqrt{2\pi}\sigma_k}exp(-\frac{1}{2\sigma_k^2}(x - \mu_k)^2)$
+
+into 4.10, then we get:
+
+$p_k(x) = \frac{\pi_k\frac{1}{\sqrt{2\pi}\sigma_k}exp(-\frac{1}{2\sigma_k^2}(x - \mu_k)^2)}{\sum_{i=l}^K\pi_l\frac{1}{\sqrt{2\pi}\sigma_l}exp(-\frac{1}{2\sigma_l^2}(x - \mu_l)^2)}$
+
+Finding the largest $p_k(x)$ is equivalent to finding the largest ${\pi_k\frac{1}{\sqrt{2\pi}\sigma_k}exp(-\frac{1}{2\sigma_k^2}(x - \mu_k)^2)}$.
+
+Taking log of the above expression, we get:
+
+$log(\pi_k) - log(\sigma_k) - \frac{1}{2\sigma_k^2}(x - \mu_k)^2$
+
+which can be written as:
+
+$log(\pi_k) - log(\sigma_k) - \frac{1}{2\sigma_k^2}(x^2-2x\mu_k+\mu_k^2)$
+
+or:
+
+$-\frac{1}{2\sigma_k^2}x^2+\frac{\mu_k}{\sigma_k^2}x-\frac{\mu_k^2}{2\sigma_k^2}-log(\sigma_k)+log(\pi_k)$
+
+This last expression is quadratic.
+
+# Q5
+
+##(a)
+
+QDA may perform better on the training set because it may overfit. LDA may perform better than QDA on the test set.
+
+##(b)
+
+QDA may perform better both on the training set and the test set.
+
+##(c)
+
+The prediction accuracy of QDA may improve because it can learn more patterns in the data.
+
+##(d)
+
+False. The sample points in training set is not the whole population, QDA may learn some special patterns only appearing in the training set, which may cause wrong prediction in test set.
+
+# Q11
+
+```{r}
+library(ISLR)
+Auto <- Auto
+```
+
+## (a)
+
+```{r}
+Q11 <- data.frame(mpg01 = rep(0,nrow(Auto)), Auto)
+Q11$mpg01[Auto$mpg > median(Auto$mpg)] <- 1
+```
+
+## (b)
+
+```{r}
+pairs(Q11)
+```
+
+```{r}
+hist(log(Q11[,8]),xlab = names(Q11)[8])
+```
+
+
+```{r}
+for(i in 2:length(Q11)){
+  plot(Q11[,i], Q11$mpg01,xlab = names(Q11)[i], ylab = "mpg01", main = paste(names(Q11)[i],"and mpg01"))
+}
+```
+
+Since mpg01 is generalized from mpg, it is highly correlate with mpg. Higher displacement, horsepower, weight may have higher probability that mpg01 is equal to 0. Lower acceleration may have higher probability that mpg01 is equal to 0. 
+
+```{r}
+for(i in 2:(length(Q11)-1)){
+  boxplot(Q11[,i] ~ Q11$mpg01,ylab = names(Q11)[i], xlab = "mpg01", main = paste(names(Q11)[i],"and mpg01"))
+  }
+```
+
+In boxplot, we can find that higher cylinders may may have higher probability that mpg01 is equal to 0, while lower year and origin may may have higher probability that mpg01 is equal to 0.
+
+## (c)
+
+```{r}
+set.seed(1111)
+train <- sample(392,size = 294)
+Q11_train <- Q11[train,-c(2, 10)]
+Q11_test <- Q11[-train,-c(2, 10)]
+```
+
+## (d)
+
+```{r}
+library(MASS)
+lda.fit <- lda(mpg01 ~ .-origin, data = Q11_train)
+lda.pred_train <- predict(lda.fit, Q11_train)
+lda.class_train <- lda.pred_train$class
+table(lda.class_train ,Q11_train$mpg01)
+lda.pred_test <- predict(lda.fit, Q11_test)
+lda.class_test <- lda.pred_test$class
+table(lda.class_test ,Q11_test$mpg01)
+```
+
+
+
+
+
+
+
+

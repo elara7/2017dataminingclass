@@ -1,7 +1,7 @@
 ---
 title: "Homework of Dataminning, CH5"
 author: "Zexian Wang, Student ID 15420151152805"
-date: "2017年3月15日"
+date: "2017-03-15"
 output: pdf_document
 ---
 
@@ -34,35 +34,226 @@ X and Y have non-linear relationship.
 
 # (c)
 
+Build the function of LOOCV for OLS:
+
 ```{r}
-set.seed(1)
-Q8data <- data.frame(inter = rep(1,length(x)), X = x, Y = y)
-
-
-
-OLS <- function(x, y){
-  beta <- solve(t(x)%*%x)%*%t(x)%*%y
-  return(beta)
-}
-n=100
-k=5
-subdata <- function(n, k){
-  sn <- n/k
-  index <- 1:n
-  for (i in 1:k){
-  sa <- sample(index, sn)
-  index <- index[-sa]
+# function for OLS
+OLS <- function(trainx, trainy, testx = NULL){
+  beta <- solve(t(trainx)%*%trainx)%*%t(trainx)%*%trainy # solve beta
+  if(is.null(testx)){
+    return(list(beta = beta, trainpred = trainx%*%beta)) 
+  }
+  if(!is.null(testx)){
+    return(list(beta = beta, 
+                trainpred = trainx%*%beta, 
+                testpred = testx%*%beta)) # return prediction for test set
   }
 }
 
-OLS(x = Q8data[,c("inter","X")][-1,], y = Q8data$Y[-1])
-
-i=1
-err2 <- NULL
-for( i in 1:nrow(Q8data)){
-  beta <- OLS(x = Q8data[,c("inter","X")][-i,], y = Q8data$Y[-i])
-  err2[i] <- (as.matrix(Q8data[,c("inter","X")][i,])%*%beta - Q8data$Y[i])^2
+# function of LOOCV for OLS
+OLSLOOCV <- function(datax, datay){ 
+  n <- nrow(datax)
+  datax <- cbind(inter = rep(1,n), datax)
+  datax <- as.matrix(datax)
+  datay <- as.matrix(datay)
+  return(mean(((datax%*%OLS(trainx = datax, trainy = datay)[["beta"]] - 
+                  datay)/(1 - diag(datax%*%solve(t(datax)%*%datax)%*%t(datax))))^2))
 }
-mean(err2)
 ```
+
+Get LOOCV error:
+
+```{r}
+# combine data
+inputdata <- data.frame(X = x, Y = y)
+
+set.seed(1)
+res <- NULL
+for(i in 1:4){
+  res <- c(res, OLSLOOCV(datax = poly(inputdata[,c("X")], i), datay = inputdata[,c("Y")]))
+}
+names(res) <- c("i", "ii", "iii", "iv")
+res
+```
+
+We can check the result with Cross Validation:
+
+```{r}
+# create index of corss training set
+subdata <- function(n, k){
+  sample(rep(1:k,n/k),n, replace = F)
+}
+
+# function for corss validation
+CVMSE <- function(datax, datay, k, fun){
+  n <- nrow(datax)
+  if (n!=length(datay)){
+    stop("x and y have different number of rows")
+  }
+  datax <- cbind(inter = rep(1,n), datax)
+
+  datax <- as.matrix(datax)
+  datay <- as.matrix(datay)
+  
+  label <- unique(subdata(nrow(datax),k))
+  mse <- NULL
+  for (i in label){
+    pred <- fun(trainx = datax[label!=i,], trainy = datay[label!=i], 
+                testx = datax[label==i,])[["testpred"]]
+    mse <- c(mse, mean((pred - datay[label==i])^2))
+  }
+  return(mean(mse))
+}
+
+# Get LOOCV error:
+set.seed(1)
+res <- NULL
+for(i in 1:4){
+  res <- c(res, CVMSE(datax = poly(inputdata[,c("X")], i), 
+                      datay = inputdata[,c("Y")], k = 100, fun = OLS))
+}
+names(res) <- c("i", "ii", "iii", "iv")
+res
+
+```
+
+
+# (d)
+
+```{r}
+set.seed(10)
+res <- NULL
+for(i in 1:4){
+  res <- c(res, OLSLOOCV(datax = poly(inputdata[,c("X")], i), datay = inputdata[,c("Y")]))
+}
+names(res) <- c("i", "ii", "iii", "iv")
+res
+```
+
+The results are the same. Because LOOCV use every single data point to do validation.
+
+# (e)
+
+```{r}
+which.min(res)
+```
+
+The model ii has the smallest LOOCV error, as my expection. Because the data is generalized from model $y = x - 2x^2$
+
+# (f)
+
+```{r}
+summary(lm(inputdata[,c("Y")] ~ poly(inputdata[,c("X")], 1)))
+summary(lm(inputdata[,c("Y")] ~ poly(inputdata[,c("X")], 2)))
+summary(lm(inputdata[,c("Y")] ~ poly(inputdata[,c("X")], 3)))
+summary(lm(inputdata[,c("Y")] ~ poly(inputdata[,c("X")], 4)))
+```
+
+We can find that only the coefficient of $x^2$ is statistical significant, which is agree with the conclusions drawn based on the cross-validation results.
+
+# Q9
+
+```{r}
+library(MASS)
+```
+
+
+## (a)
+
+```{r}
+u_hat <- mean(Boston$medv)
+u_hat
+```
+
+
+## (b)
+
+```{r}
+sd(Boston$medv)/sqrt(length(Boston$medv))
+```
+
+On average, the mean of medv will deviate from its sample mean estimator about 0.4088611
+
+## (c)
+
+Build bootstrap funciton:
+
+```{r}
+bootstrap <- function(data, fun, R){
+  res <- NULL
+  for( i in 1:R){
+    index <- sample(nrow(data),nrow(data),replace = T)
+    res <- c(res, fun(data[index,]))
+  }
+  return(res)
+}
+```
+
+```{r}
+bootmean <- bootstrap(Boston, 
+          fun = function(x){
+            mean(x[,"medv"])
+            },
+          R = 1000
+          )
+
+sd(bootmean)
+```
+
+It is very close to the answer in (b)
+
+## (d)
+
+```{r}
+c(mean(bootmean)-2*sd(bootmean), mean(bootmean)+2*sd(bootmean))
+t.test (Boston$medv)
+```
+
+The two confidence interval are very close to each other
+
+## (e)
+
+```{r}
+median(Boston$medv)
+```
+
+## (f)
+
+```{r}
+bootmedian <- bootstrap(Boston, 
+          fun = function(x){
+            median(x[,"medv"])
+            },
+          R = 1000
+          )
+sd(bootmedian)
+```
+
+On average, the median of medv will deviate from its sample median estimator about 0.375438
+
+## (g)
+
+```{r}
+u_hat0.1 <- quantile(Boston$medv, 0.1)
+u_hat0.1
+```
+
+
+## (h)
+
+```{r}
+bootu0.1 <- bootstrap(Boston, 
+          fun = function(x){
+            quantile(x[,"medv"],0.1)
+            },
+          R = 1000
+          )
+sd(bootu0.1)
+```
+
+On average,  the tenth percentile of medv will deviate from its sample estimator about 0.375438
+
+
+
+
 

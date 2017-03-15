@@ -1,0 +1,68 @@
+---
+title: "Homework of Dataminning, CH5"
+author: "Zexian Wang, Student ID 15420151152805"
+date: "2017年3月15日"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Q8
+
+## (a)
+
+```{r}
+set.seed(1)
+y <- rnorm(100)
+x <- rnorm(100)
+y <- x - 2*x^2 + rnorm(100)
+```
+
+In this dataset, n = 100, p = 1.
+
+The model is $y = x - 2x^2$
+
+# (b)
+
+```{r}
+plot(x,y)
+```
+
+X and Y have non-linear relationship. 
+
+# (c)
+
+```{r}
+set.seed(1)
+Q8data <- data.frame(inter = rep(1,length(x)), X = x, Y = y)
+
+
+
+OLS <- function(x, y){
+  beta <- solve(t(x)%*%x)%*%t(x)%*%y
+  return(beta)
+}
+n=100
+k=5
+subdata <- function(n, k){
+  sn <- n/k
+  index <- 1:n
+  for (i in 1:k){
+  sa <- sample(index, sn)
+  index <- index[-sa]
+  }
+}
+
+OLS(x = Q8data[,c("inter","X")][-1,], y = Q8data$Y[-1])
+
+i=1
+err2 <- NULL
+for( i in 1:nrow(Q8data)){
+  beta <- OLS(x = Q8data[,c("inter","X")][-i,], y = Q8data$Y[-i])
+  err2[i] <- (as.matrix(Q8data[,c("inter","X")][i,])%*%beta - Q8data$Y[i])^2
+}
+mean(err2)
+```
+

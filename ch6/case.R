@@ -1,43 +1,44 @@
-USArrests <- USArrests
-USA2 <- scale(USArrests)
+# question 1
 
-pr.out=prcomp(USArrests, scale=TRUE)
-pr.out
-summary(pr.out) # loadings 前面系数正负没什么太大意义
-pr.out$rotation
-loadings(pr.out)
-biplot(pr.out)
-pr.out$x
-pr.out$rotation = -pr.out$rotation
-pr.out$x = -pr.out$x
-biplot(pr.out)
-pr.out$sdev
-pr.var=pr.out$sdev^2
-pve=pr.var/sum(pr.out$sdev^2)
+library(ncvreg)
+data("heart")
+x <- as.matrix(heart[,1:9])
+y <- heart$chd
 
+mod.lasso <- cv.ncvreg(x,y,family="binomial",penalty = "lasso" )
+mod.MCP <- cv.ncvreg(x,y,family="binomial",penalty = "MCP" )
+mod.SCAD <- cv.ncvreg(x,y,family="binomial",penalty = "SCAD" )
+plot(mod.lasso)
+coef(mod.lasso)
+plot(mod.MCP)
+coef(mod.MCP)
+plot(mod.SCAD)
+coef(mod.SCAD)
 
-USArrests <- scale(USArrests)
-pc <- princomp(USArrests, cor = TRUE)
-summary(pc)
-loadings(pc)
-screeplot(pc, type = 'lines')
-biplot(pc)
+# question 2
+n=100
+p=100
+mu=rep(0,p)
+simdatatype1 <- function(n, p, ro, mu){
+  require(MASS)
+  sigma = matrix(NA,nrow = p,ncol = p)
+  for (i in 1:p){
+    for (j in 1:p){
+      sigma[i,j] = ro^abs(i-j)
+    }
+  }
+  return(mvrnorm(n=n,mu=mu,Sigma=sigma))
+}
+sim1_1 <- simdatatype1(n,p,0.1,mu)
+sim1_2 <- simdatatype1(n,p,0.5,mu)
+sim1_3 <- simdatatype1(n,p,0.9,mu)
 
-
-######################################
-
-
-library(ISLR)
-data(Hitters)
-View(Hitters)
-Hitters = na.omit(Hitters)
-library(leaps)
-regfit.full=regsubsets(Salary~., Hitters)
-summary(regfit.full)
-regfit.full=regsubsets(Salary~.,Hitters,nvmax=19)
-reg.summary=summary(regfit.full)
-reg.summary
-plot(reg.summary$rss)
-plot(reg.summary$rsq)
-plot(reg.summary$adjr2)
-plot(reg.summary$bic)
+simdatatype2 <- function(n, p, ro, mu){
+  require(MASS)
+  sigma = matrix(ro,nrow = p,ncol = p)
+  diag(sigma) <- 1
+  return(mvrnorm(n=n,mu=mu,Sigma=sigma))
+}
+sim2_1 <- simdatatype2(n,p,0.1,mu)
+sim2_2 <- simdatatype2(n,p,0.5,mu)
+sim2_3 <- simdatatype2(n,p,0.9,mu)

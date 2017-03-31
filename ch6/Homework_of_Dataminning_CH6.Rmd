@@ -1,0 +1,124 @@
+---
+title: "Homework of Dataminning, CH6"
+author: "Zexian Wang, Student ID 15420151152805"
+date: "2017-03-31"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Q8
+
+(a)
+
+```{r}
+n <- 100
+x <- rnorm(100,1,2)
+e <- rnorm(100,0,1)
+```
+
+(b)
+
+```{r}
+X <- as.matrix(cbind(rep(1,n), x, x^2, x^3))
+colnames(X) <- c("intercept", "x1", "x2", "x3")
+beta <- c(1,2,3,4)
+Y <- X %*% beta + e
+```
+
+(c)
+
+```{r}
+library(leaps)
+d <- 10
+data <- as.data.frame(cbind(Y, poly(x,degree = d)))
+names(data) <- c('Y',paste0("X",1:d))
+```
+
+```{r}
+bestsubset <- regsubsets(Y~., data, nvmax = 10)
+bestsubset_summary <- summary(bestsubset)
+
+par(mfrow = c(1,3))
+plot(bestsubset_summary$cp,type = "l",xlab = "number of variable", ylab = "cp", main = "cp")
+whichcp <- which.min(bestsubset_summary$cp)
+points(whichcp, bestsubset_summary$cp[whichcp], col = "red")
+
+plot(bestsubset_summary$bic,type = "l",xlab = "number of variable", ylab = "bic", main = "bic")
+whichbic <- which.min(bestsubset_summary$bic)
+points(whichbic, bestsubset_summary$bic[whichbic], col = "red")
+
+plot(bestsubset_summary$adjr2,type = "l",xlab = "number of variable", ylab = "adjr2", main = "adjr2")
+whichadjr2 <- which.max(bestsubset_summary$adjr2)
+points(whichadjr2, bestsubset_summary$adjr2[whichadjr2], col = "red")
+
+# based on Cp
+whichcp
+coef(bestsubset,whichcp)
+# based on BIC
+whichbic
+coef(bestsubset,whichbic)
+# based on adjR2
+whichadjr2
+coef(bestsubset,whichadjr2)
+```
+
+(d)
+
+```{r}
+fw <- regsubsets(Y~., data, method = "forward")
+summaryfw <- summary(fw)
+
+plot(summaryfw$cp,type = "l",xlab = "number of variable", ylab = "cp", main = "cp")
+whichcp <- which.min(summaryfw$cp)
+points(whichcp, summaryfw$cp[whichcp], col = "red")
+
+plot(summaryfw$bic,type = "l",xlab = "number of variable", ylab = "bic", main = "bic")
+whichbic <- which.min(summaryfw$bic)
+points(whichbic, summaryfw$bic[whichbic], col = "red")
+
+plot(summaryfw$adjr2,type = "l",xlab = "number of variable", ylab = "adjr2", main = "adjr2")
+whichadjr2 <- which.max(summaryfw$adjr2)
+points(whichadjr2, summaryfw$adjr2[whichadjr2], col = "red")
+
+# based on Cp
+whichcp
+coef(fw,whichcp)
+# based on BIC
+whichbic
+coef(fw,whichbic)
+# based on adjR2
+whichadjr2
+coef(fw,whichadjr2)
+```
+
+```{r}
+bw <- regsubsets(Y~., data, method = "backward")
+summarybw <- summary(bw)
+
+plot(summarybw$cp,type = "l",xlab = "number of variable", ylab = "cp", main = "cp")
+whichcp <- which.min(summarybw$cp)
+points(whichcp, summarybw$cp[whichcp], col = "red")
+
+plot(summarybw$bic,type = "l",xlab = "number of variable", ylab = "bic", main = "bic")
+whichbic <- which.min(summarybw$bic)
+points(whichbic, summarybw$bic[whichbic], col = "red")
+
+plot(summarybw$adjr2,type = "l",xlab = "number of variable", ylab = "adjr2", main = "adjr2")
+whichadjr2 <- which.max(summarybw$adjr2)
+points(whichadjr2, summarybw$adjr2[whichadjr2], col = "red")
+
+# based on Cp
+whichcp
+coef(bw,whichcp)
+# based on BIC
+whichbic
+coef(bw,whichbic)
+# based on adjR2
+whichadjr2
+coef(bw,whichadjr2)
+```
+
+

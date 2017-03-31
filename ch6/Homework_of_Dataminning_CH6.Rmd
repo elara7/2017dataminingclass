@@ -14,9 +14,10 @@ knitr::opts_chunk$set(echo = TRUE)
 (a)
 
 ```{r}
+set.seed(1234)
 n <- 100
-x <- rnorm(100,1,2)
-e <- rnorm(100,0,1)
+x <- rnorm(100)
+e <- rnorm(100)
 ```
 
 (b)
@@ -33,9 +34,11 @@ Y <- X %*% beta + e
 ```{r}
 library(leaps)
 d <- 10
-data <- as.data.frame(cbind(Y, poly(x,degree = d)))
+data <- as.data.frame(cbind(Y, poly(x,degree = d,raw = T)))
 names(data) <- c('Y',paste0("X",1:d))
 ```
+
+best subset
 
 ```{r}
 bestsubset <- regsubsets(Y~., data, nvmax = 10)
@@ -67,10 +70,13 @@ coef(bestsubset,whichadjr2)
 
 (d)
 
+forward
+
 ```{r}
 fw <- regsubsets(Y~., data, method = "forward")
 summaryfw <- summary(fw)
 
+par(mfrow = c(1,3))
 plot(summaryfw$cp,type = "l",xlab = "number of variable", ylab = "cp", main = "cp")
 whichcp <- which.min(summaryfw$cp)
 points(whichcp, summaryfw$cp[whichcp], col = "red")
@@ -94,10 +100,13 @@ whichadjr2
 coef(fw,whichadjr2)
 ```
 
+backward
+
 ```{r}
 bw <- regsubsets(Y~., data, method = "backward")
 summarybw <- summary(bw)
 
+par(mfrow = c(1,3))
 plot(summarybw$cp,type = "l",xlab = "number of variable", ylab = "cp", main = "cp")
 whichcp <- which.min(summarybw$cp)
 points(whichcp, summarybw$cp[whichcp], col = "red")
@@ -121,4 +130,126 @@ whichadjr2
 coef(bw,whichadjr2)
 ```
 
+All the model choose the right model.
+
+(e)
+
+```{r}
+par(mfrow = c(1,1))
+library(glmnet)
+modelx <- model.matrix(Y~., data)[,-1]
+modely <- data$Y
+modellasso <- cv.glmnet(modelx, modely, alpha = 1)
+plot(modellasso)
+coef(modellasso)
+```
+
+Lasso model also choose the right variables.
+
+(f)
+
+```{r}
+beta7 <- 5
+Y = rep(beta[1],n) + beta7*x^7 + e
+data$Y <- Y
+
+```
+
+best subset
+
+```{r}
+bestsubset <- regsubsets(Y~., data)
+bestsubset_summary <- summary(bestsubset)
+
+par(mfrow = c(1,3))
+plot(bestsubset_summary$cp,type = "l",xlab = "number of variable", ylab = "cp", main = "cp")
+whichcp <- which.min(bestsubset_summary$cp)
+points(whichcp, bestsubset_summary$cp[whichcp], col = "red")
+
+plot(bestsubset_summary$bic,type = "l",xlab = "number of variable", ylab = "bic", main = "bic")
+whichbic <- which.min(bestsubset_summary$bic)
+points(whichbic, bestsubset_summary$bic[whichbic], col = "red")
+
+plot(bestsubset_summary$adjr2,type = "l",xlab = "number of variable", ylab = "adjr2", main = "adjr2")
+whichadjr2 <- which.max(bestsubset_summary$adjr2)
+points(whichadjr2, bestsubset_summary$adjr2[whichadjr2], col = "red")
+
+# based on Cp
+whichcp
+coef(bestsubset,whichcp)
+# based on BIC
+whichbic
+coef(bestsubset,whichbic)
+# based on adjR2
+whichadjr2
+coef(bestsubset,whichadjr2)
+```
+
+lasso
+
+```{r}
+par(mfrow = c(1,1))
+library(glmnet)
+modelx <- model.matrix(Y~., data)[,-1]
+modely <- data$Y
+modellasso <- cv.glmnet(modelx, modely, alpha = 1)
+plot(modellasso)
+coef(modellasso)
+```
+
+Only the best subset selection with adjR2 choose the wrong variable X2
+
+# Q9
+
+(a)
+
+```{r}
+library(ISLR)
+n = nrow(College)
+set.seed(1)
+College <- College[,c("Apps",names(College)[-2])]
+trainindex <- sample(n, n/3*2,replace = F)
+train <- College[trainindex,]
+test <- College[-trainindex,]
+```
+
+(b)
+
+LS
+
+```{r}
+modellm <- lm(Apps~.,train)
+mean((predict(modellm,newdata = test[,-1])-test$Apps)^2)
+```
+
+(c)
+
+Ridge
+
+```{r}
+
+trainx <- model.matrix(Apps~., train)[,-1]
+testx <- model.matrix(Apps~.,test)[,-1]
+trainy <- train$Apps
+modelridge <- cv.glmnet(trainx, trainy, alpha = 0)
+mean((predict(modelridge,newx = testx)-test$Apps)^2)
+```
+
+(d)
+
+```{r}
+
+trainx <- model.matrix(Apps~., train)[,-1]
+testx <- model.matrix(Apps~.,test)[,-1]
+trainy <- train$Apps
+modellasso <- cv.glmnet(trainx, trainy, alpha = 1)
+mean((predict(modellasso,newx = testx)-test$Apps)^2)
+sum(coef(modellasso)!=0)
+```
+
+(e)
+
+```{r}
+
+```
 

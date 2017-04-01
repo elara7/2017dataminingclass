@@ -227,7 +227,7 @@ mean((predict(modellm,newdata = test[,-1])-test$Apps)^2)
 Ridge
 
 ```{r}
-
+library(glmnet)
 trainx <- model.matrix(Apps~., train)[,-1]
 testx <- model.matrix(Apps~.,test)[,-1]
 trainy <- train$Apps
@@ -236,6 +236,8 @@ mean((predict(modelridge,newx = testx)-test$Apps)^2)
 ```
 
 (d)
+
+Lasso 
 
 ```{r}
 
@@ -249,7 +251,53 @@ sum(coef(modellasso)!=0)
 
 (e)
 
-```{r}
+PCR
 
+```{r}
+library(pls)
+set.seed(1)
+pcr.fit <- pcr(Apps~., data=train, scale = T, validation = "CV")
+validationplot(pcr.fit)
+summary(pcr.fit)
 ```
 
+The best M is 17.
+
+```{r}
+predictpcr <- predict(pcr.fit, test[,-1], ncomp = 17)
+mean((predictpcr - test$Apps)^2)
+```
+
+(f)
+
+PLS
+
+```{r}
+set.seed(1)
+pls.fit <- plsr(Apps~., data = train, scale = T, validation = "CV")
+validationplot(pls.fit)
+summary(pls.fit)
+```
+
+The best M is 9.
+
+```{r}
+predictpls <- predict(pls.fit, test[,-1], ncomp = 9)
+mean((predictpls - test$Apps)^2)
+```
+
+(g)
+
+The MSE of these models are: LS
+
+LS:925316.1
+
+Ridge:1260720
+
+Lasso:1298099
+
+PCR:925316.1
+
+PLS:931713.9
+
+The best model is PCR with 17 compents and Least Square. The worest model is Lasso. However, there are not very obvious difference between these MSEs.

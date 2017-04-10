@@ -24,13 +24,13 @@ names(Boston)
 lm.fit<-lm(medv~lstat)
 lm.fit=lm(medv~lstat,data=Boston)
 attach(Boston)
-lm.fit=lm(medv∼lstat)
+lm.fit=lm(medv~lstat)
 lm.fit
 summary(lm.fit)
 names(lm.fit)
 coef(lm.fit)
 confint(lm.fit)
-predict(lm.fit,data.frame(lstat=(c(5,10,15)))
+predict(lm.fit,data.frame(lstat=(c(5,10,15))))
 predict(lm.fit,data.frame(lstat=(c(5,10,15))),
                 interval="prediction")
 plot(lstat,medv)
@@ -46,7 +46,7 @@ plot(predict(lm.fit), rstudent(lm.fit))
 plot(hatvalues(lm.fit))
 which.max(hatvalues(lm.fit))
 #######Multiple linear regression
-lm.fit=lm(medv∼lstat+age,data=Boston) 
+lm.fit=lm(medv~lstat+age,data=Boston) 
 summary(lm.fit)
 ########################################
 ###qualitative predictors
@@ -67,7 +67,7 @@ fit<-lm(Sales~TV+Radio+TV*Radio,data=ads)
 summary(fit)
 ############polynomial regression
 data(Auto)
-summary(lm(mpg~horsepower+I(horsepower^2),data=Auto))
+summary(lm(mpg~horsepower+I(horsepower^2),data=Auto)) #I()keep a variable
 ####collinearity
 plot(credit$Limit,credit$Age,col="red")
 plot(credit$Limit,credit$Rating,col="red")

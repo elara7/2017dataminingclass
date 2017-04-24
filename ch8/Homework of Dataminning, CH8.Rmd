@@ -1,0 +1,203 @@
+---
+title: "Homework of Dataminning, CH8"
+author: "Zexian Wang, Student ID 15420151152805"
+date: "2017/4/24"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Q9
+
+##(a)
+
+```{r}
+library(ISLR)
+set.seed(2017)
+OJ <- OJ
+n <- nrow(OJ)
+train = sample(n,800,replace = F)
+OJ_train <- OJ[train,]
+OJ_test <- OJ[-train,]
+```
+
+##(b)
+
+```{r}
+library(tree)
+oj_tree <- tree(Purchase ~ ., data = OJ_train)
+summary(oj_tree)
+```
+
+The tree has 8 terminal nodes. The training error rate is 0.165
+
+##(c)
+
+```{r}
+oj_tree
+```
+
+Node 8 means that, if LoyalCH < 0.0356415, the model will think the sample is belong to MM.
+
+##(d)
+
+```{r}
+plot(oj_tree)
+text(oj_tree)
+```
+
+LoyalCH is the most important variable of the tree. If LoyalCH < 0.264232, the tree predicts MM. If LoyalCH > 0.508643, the tree predicts CH. Other cases are depended on PriceDiff and SpecialCH.
+
+##(e)
+
+```{r}
+oj_pred <- predict(oj_tree, OJ_test,type="class")
+mt <- table(OJ_test$Purchase, oj_pred)
+
+#table
+mt
+
+#acc
+(mt[1,1]+mt[2,2])/nrow(OJ_test)
+```
+
+##(f)
+
+```{r}
+oj_cv <- cv.tree(oj_tree, FUN=prune.tree)
+```
+
+##(g)
+
+```{r}
+plot(oj_cv$size, oj_cv$dev, type = "b", xlab = "Tree Size", ylab = "Deviance")
+```
+
+##(h)
+
+Size of 6 
+
+##(i)
+
+```{r}
+oj_pruned <- prune.tree(oj_tree, best = 6)
+```
+
+##(j)
+
+```{r}
+summary(oj_pruned)
+```
+
+Misclassification error of pruned tree is exactly same as that of original tree.
+
+##(k)
+```{r}
+pred_unpruned = predict(oj_tree, OJ_test, type = "class")
+misclass_unpruned = sum(OJ_test$Purchase != pred_unpruned)
+misclass_unpruned/length(pred_unpruned)
+
+pred_pruned = predict(oj_pruned, OJ_test, type = "class")
+misclass_pruned = sum(OJ_test$Purchase != pred_pruned)
+misclass_pruned/length(pred_pruned)
+```
+
+Pruned and unpruned trees have same test error rate.
+
+# Q10
+
+##(a)
+```{r}
+library(ISLR)
+Hitters <- Hitters[-which(is.na(Hitters$Salary)),]
+Hitters$Salary <- log(Hitters$Salary)
+```
+
+
+##(b)
+
+```{r}
+set.seed(2017)
+n <- nrow(Hitters)
+train <- sample(n,200,replace = F)
+Hitters_train <- Hitters[train,]
+Hitters_test <- Hitters[-train,]
+```
+
+##(c)
+
+```{r}
+set.seed(2017)
+library(gbm)
+lambda <- 10^seq(-10,-0.2,by=0.1)
+length_lambda <- length(lambda)
+train_errors <- rep(NA,length_lambda)
+test_errors <- rep(NA,length_lambda)
+for (i in 1:length_lambda){
+  boost <- gbm(Salary ~ ., data=Hitters_train, distribution = "gaussian", n.trees = 1000, shrinkage = lambda[i])
+  train_pred <- predict(boost, Hitters_train, n.trees = 1000)
+  test_pred <- predict(boost, Hitters_test, n.trees = 1000)
+  train_errors[i] <- mean((Hitters_train$Salary - train_pred)^2)
+  test_errors[i] <- mean((Hitters_test$Salary - test_pred)^2)
+}
+
+plot(lambda, train_errors, type = "b", xlab="lambda", ylab="train MSE", col = "red", pch = 20)
+
+```
+
+
+##(d)
+
+```{r}
+plot(lambda, test_errors, type = "b", xlab="lambda", ylab="test MSE", col = "blue", pch = 20)
+```
+
+
+##(e)
+
+```{r}
+lm_fit = lm(Salary ~ ., data = Hitters_train)
+lm_pred = predict(lm_fit, Hitters_test)
+mean((Hitters_test$Salary - lm_pred)^2)
+```
+
+```{r}
+library(glmnet)
+set.seed(2017)
+x <- model.matrix(Salary ~ ., data = Hitters_train)
+y <- Hitters_train$Salary
+x_test <- model.matrix(Salary ~ ., data=Hitters_test)
+lasso_fit <- glmnet(x,y,alpha = 1)
+lasso_pred <- predict(lasso_fit, s =0.01, newx=x_test)
+mean((Hitters_test$Salary - lasso_pred)^2)
+```
+
+```{r}
+lambda[which.min(test_errors)]
+min(test_errors)
+```
+
+Boosting has the smallest mse.
+
+##(f)
+
+```{r}
+boost_best = gbm(Salary ~ ., data = Hitters_train, distribution = "gaussian", 
+    n.trees = 1000, shrinkage = lambda[which.min(test_errors)])
+summary(boost_best)
+```
+
+CRuns, CAtBat and CHits.
+
+##(g)
+
+```{r}
+library(randomForest)
+set.seed(2017)
+rf <- randomForest(Salary ~ ., data = Hitters_train, ntree = 500, mtry=19)
+rf_pred <- predict(rf,Hitters_test)
+mean((Hitters_test$Salary - rf_pred)^2)
+```
+
